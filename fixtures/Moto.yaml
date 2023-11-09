@@ -1,0 +1,13 @@
+App\Entity\Moto:
+    moto1:
+        marca: Yamaha
+        modelo: cross
+        color: blanca
+        matricula: 123A
+        venta: null
+    moto2:
+       marca: BMW
+       modelo: NOSE
+       color: negro
+       matricula: 345B
+       venta: <( new \DateTime('2023-01-01'))>

@@ -1,0 +1,13 @@
+App\Entity\Auto:
+    auto1:
+        marca: Ford
+        modelo: Focus
+        color: negro
+        matricula: AA1234
+        venta: null
+    auto2:
+       marca: Ford
+       modelo: Falco
+       color: verde
+       matricula: AR1976
+       venta: <( new \DateTime('1983-12-10'))>
