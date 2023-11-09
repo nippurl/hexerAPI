@@ -23,7 +23,7 @@ class VehiculoTest extends ApiTestCase
 		{
 				$response = static::createClient()
 				                  ->request('GET', self::URL.'/');
-				$this->assertResponseIsSuccessful();
+				$this->assertEquals($response->getStatusCode(), 200);
 				$this->assertJson('[{"tipo":"Moto","marca":"Yamaha","modelo":"cross","color":"blanca","matricula":"123A","venta":null,"id":6},{"tipo":"Auto","marca":"Ford","modelo":"Focus","color":"negro","matricula":"AA1234","venta":null,"id":8}]',
 					$response->getContent()
 				);
@@ -41,12 +41,12 @@ class VehiculoTest extends ApiTestCase
 				                  ->request('GET', self::URL.'/new/a', [
 					                  'json' => $vehiculo,
 				                  ]);
-				$this->assertResponseIsSuccessful();
+				$this->assertEquals($response->getStatusCode(), 200);
 				$resultado = $response->toArray();
 				$this->assertEquals('ok', $resultado['resultado']);
 				$response = static::createClient()
 				                  ->request('GET', self::URL.'/');
-				$this->assertResponseIsSuccessful();
+				$this->assertEquals($response->getStatusCode(), 200);
 				$this->assertEquals(count($response->toArray()), 2);
 		}
 		
@@ -55,7 +55,7 @@ class VehiculoTest extends ApiTestCase
 				$response = static::createClient()
 				                  ->request('GET', self::URL.'/3/ver', [
 				                  ]);
-				$this->assertResponseIsSuccessful();
+				$this->assertEquals($response->getStatusCode(), 200);
 				$resultado = $response->toArray();
 				//\var_dump($resultado);
 				$this->assertEquals('Ford', $resultado['marca']);
