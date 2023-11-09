@@ -6,7 +6,6 @@ use App\Entity\Vehiculo;
 use App\Form\VehiculoType;
 use App\Repository\VehiculoRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Hautelook\AliceBundle\PhpUnit\RefreshDatabaseTrait;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -111,14 +110,22 @@ class ApiController extends AbstractController
 		#[Route('/{id}/vender', name: 'api_vender', methods: ['GET'])]
 		public function Vehiculo(Vehiculo $vehiculo, EntityManagerInterface $entityManager): Response
 		{
-				$vehiculo->vendido();
-				$entityManager->persist($vehiculo);
-				$entityManager->flush();
-				$resultado = [
-					'resultado' => 'ok',
-					'vehiculo'  => $vehiculo->jsonSerialize(),
-				];
-				$response  = new Response(json_encode($resultado, JSON_THROW_ON_ERROR), 200);
+				if ($vehiculo->isDisponible()) {
+						$vehiculo->vendido();
+						$entityManager->persist($vehiculo);
+						$entityManager->flush();
+						$resultado = [
+							'resultado' => 'ok',
+							'vehiculo'  => $vehiculo->jsonSerialize(),
+						];
+				}else{
+						$resultado = [
+							'resultado' => 'ERROR',
+							'error'     => 'NO esta Disponible',
+							'vehiculo'  => $vehiculo->jsonSerialize(),
+						];
+				}
+				$response = new Response(json_encode($resultado, JSON_THROW_ON_ERROR), 200);
 				$response->headers->set('Content-Type', 'application/json');
 				return $response;
 		}

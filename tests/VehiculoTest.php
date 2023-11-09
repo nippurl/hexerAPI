@@ -181,6 +181,8 @@ class VehiculoTest extends ApiTestCase
 				$this->assertEquals('Yamaha', $vehiculo->getMarca());
 				$this->assertEquals('cross', $vehiculo->getModelo());
 				$this->assertNotEquals('123A', $vehiculo->getMatricula());
+				$this->assertEquals(4,strlen($vehiculo->getMatricula()));
+				
 		}
 		
 		public function testRematricularAuto()
@@ -217,6 +219,7 @@ class VehiculoTest extends ApiTestCase
 				$this->assertEquals('Ford', $vehiculo->getMarca());
 				$this->assertEquals('Focus', $vehiculo->getModelo());
 				$this->assertNotEquals('AA1234', $vehiculo->getMatricula());
+				$this->assertEquals(6,strlen($vehiculo->getMatricula()));
 				
 		}
 		
@@ -287,18 +290,42 @@ class VehiculoTest extends ApiTestCase
 				                               ->find($id);
 				$this->assertEquals('Yamaha', $vehiculo->getMarca());
 				$this->assertEquals('cross', $vehiculo->getModelo());
-				$this->assertFalse($vehiculo->isDisponible());
-				
-				//// Cambio los datos
-				
-				$response = static::createClient()
+				//\var_dump($resultado);
+				$this->assertTrue($vehiculo->isDisponible());
+				//// Primera VEnta
+				$client =  static::createClient();
+				$response =$client
 				                  ->request('GET', self::URL."/$id/vender", [
 					                  'json' => $vehiculo,
 				                  ]);
 				
 				$resultado = $response->toArray();
-				//\var_dump($resultado);
-				$this->assertEquals('error', $resultado['resultado']);
+				if ($resultado['resultado'] !== 'ok') {
+						\var_dump('PRIMER VENTA');
+						\var_dump($resultado);
+				}
+				$this->assertEquals('ok', $resultado['resultado']);
+				$venta = $resultado['vehiculo']['venta'];
+				$this->assertNotNull($venta);
+				$vehiculo      = $entityManager->getRepository(Vehiculo::class)
+				                               ->find($id);
+				$this->assertEquals('Yamaha', $vehiculo->getMarca());
+				$this->assertEquals('cross', $vehiculo->getModelo());
+				$this->assertFalse($vehiculo->isDisponible());
+				
+				//// Segunda venta
+				
+				$response = $client
+				                  ->request('GET', self::URL."/$id/vender", [
+					                  'json' => $vehiculo,
+				                  ]);
+				
+				$resultado = $response->toArray();
+				if ($resultado['resultado'] !== 'error') {
+						\var_dump('SEGUNDA VENTA');
+						\var_dump($resultado);
+				}
+				$this->assertEquals('ERROR', $resultado['resultado']);
 				$vehiculo = $resultado['vehiculo'];
 				$this->assertEquals('Yamaha', $vehiculo['marca']);
 				$this->assertEquals('cross', $vehiculo['modelo']);
