@@ -53,7 +53,7 @@ class ApiController extends AbstractController
 				$entityManager->flush();
 				$resultado = ['resultado' => 'ok', 'vehiculo' => $vehiculo->jsonSerialize()];
 				
-				$response = new Response(json_encode($resultado, JSON_THROW_ON_ERROR), 200);
+				$response = new Response(json_encode($resultado, JSON_THROW_ON_ERROR), 201);
 				$response->headers->set('Content-Type', 'application/json');
 				
 				return $response;
@@ -123,6 +123,29 @@ class ApiController extends AbstractController
 							'resultado' => 'ERROR',
 							'error'     => 'NO esta Disponible',
 							'vehiculo'  => $vehiculo->jsonSerialize(),
+						];
+				}
+				$response = new Response(json_encode($resultado, JSON_THROW_ON_ERROR), 200);
+				$response->headers->set('Content-Type', 'application/json');
+				return $response;
+		}
+		
+		
+		#[Route('/verificar', name: 'api_verificar', methods: [ 'GET','POST'])]
+		public function verificar(Request $request): Response
+		{
+				$arr = $request->toArray();
+				try{
+						// Buscar el Tipo y crear el objeto
+						$tipo = $arr['tipo'];
+						$vehiculo = Vehiculo::create($tipo);
+						$form = $this->createForm(VehiculoType::class, $vehiculo);
+						$form->submit($arr);
+						$resultado = ['resultado' => 'ok'];
+				}catch (\Exception $e){
+						$resultado = [
+							'resultado' => 'ERROR',
+							'error'     => $e->getMessage(),
 						];
 				}
 				$response = new Response(json_encode($resultado, JSON_THROW_ON_ERROR), 200);

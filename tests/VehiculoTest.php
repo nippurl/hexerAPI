@@ -29,7 +29,25 @@ class VehiculoTest extends ApiTestCase
 				);
 		}
 		
-		public function testNew(): void
+		public function testIndexQuery(): void
+		{
+				$response = static::createClient()
+				                  ->request('GET',
+					                  self::URL.'/',
+					                  [
+						                  'query' => [
+							                  'q' => 'ford',
+						                  ],
+					                  ]
+				                  );
+				$this->assertEquals($response->getStatusCode(), 200);
+				//$this->assertEquals(1, count($response->toArray()));
+				$this->assertJson('[{"tipo":"Auto","marca":"Ford","modelo":"Focus","color":"negro","matricula":"AA1234","venta":null,"id":8}]',
+					$response->getContent()
+				);
+		}
+		
+		public function testNewAuto(): void
 		{
 				$vehiculo = [
 					'marca'     => 'Renault',
@@ -37,24 +55,48 @@ class VehiculoTest extends ApiTestCase
 					'color'     => 'gris',
 					'matricula' => 'VI1986',
 				];
-				$response = static::createClient()
-				                  ->request('GET', self::URL.'/new/a', [
-					                  'json' => $vehiculo,
-				                  ]);
-				$this->assertEquals($response->getStatusCode(), 200);
+				$client   = static::createClient();
+				$response = $client
+					->request('GET', self::URL.'/new/a', [
+						'json' => $vehiculo,
+					]);
+				$this->assertEquals($response->getStatusCode(), 201);
 				$resultado = $response->toArray();
 				$this->assertEquals('ok', $resultado['resultado']);
-				$response = static::createClient()
-				                  ->request('GET', self::URL.'/');
+				$response = $client
+					->request('GET', self::URL.'/');
 				$this->assertEquals($response->getStatusCode(), 200);
-				$this->assertEquals(count($response->toArray()), 2);
+				$this->assertEquals(count($response->toArray()), 3);
 		}
+		
+		
+		public function testNewMoto(): void
+		{
+				$vehiculo = [
+					'marca'     => 'Honda',
+					'modelo'    => '600cc',
+					'color'     => 'negra',
+					'matricula' => '600H',
+				];
+				$client   = static::createClient();
+				$response = $client
+					->request('GET', self::URL.'/new/m', [
+						'json' => $vehiculo,
+					]);
+				$this->assertEquals($response->getStatusCode(), 201);
+				$resultado = $response->toArray();
+				$this->assertEquals('ok', $resultado['resultado']);
+				$response = $client
+					->request('GET', self::URL.'/');
+				$this->assertEquals($response->getStatusCode(), 200);
+				$this->assertEquals(count($response->toArray()), 3);
+		}
+		
 		
 		public function testVer()
 		{
 				$response = static::createClient()
-				                  ->request('GET', self::URL.'/3/ver', [
-				                  ]);
+				                  ->request('GET', self::URL.'/3/ver');
 				$this->assertEquals($response->getStatusCode(), 200);
 				$resultado = $response->toArray();
 				//\var_dump($resultado);
@@ -88,7 +130,7 @@ class VehiculoTest extends ApiTestCase
 				                  ]);
 				
 				$resultado = $response->toArray();
-				\var_dump($resultado);
+				//\var_dump($resultado);
 				
 				$this->assertEquals('ok', $resultado['resultado']);
 				$vehiculo = $resultado['vehiculo'];
@@ -133,6 +175,7 @@ class VehiculoTest extends ApiTestCase
 				$resultado = $response->toArray();
 				//\var_dump($resultado);
 				$this->assertEquals('ERROR', $resultado['resultado']);
+				$this->assertEquals('No se puede guardar un vehiculo que ya no disponible', $resultado['error']);
 				$vehiculo = $resultado['vehiculo'];
 				$this->assertEquals('Renault', $vehiculo['marca']);
 				$this->assertEquals('12', $vehiculo['modelo']);
@@ -181,7 +224,7 @@ class VehiculoTest extends ApiTestCase
 				$this->assertEquals('Yamaha', $vehiculo->getMarca());
 				$this->assertEquals('cross', $vehiculo->getModelo());
 				$this->assertNotEquals('123A', $vehiculo->getMatricula());
-				$this->assertEquals(4,strlen($vehiculo->getMatricula()));
+				$this->assertEquals(4, strlen($vehiculo->getMatricula()));
 				
 		}
 		
@@ -219,7 +262,7 @@ class VehiculoTest extends ApiTestCase
 				$this->assertEquals('Ford', $vehiculo->getMarca());
 				$this->assertEquals('Focus', $vehiculo->getModelo());
 				$this->assertNotEquals('AA1234', $vehiculo->getMatricula());
-				$this->assertEquals(6,strlen($vehiculo->getMatricula()));
+				$this->assertEquals(6, strlen($vehiculo->getMatricula()));
 				
 		}
 		
@@ -293,11 +336,11 @@ class VehiculoTest extends ApiTestCase
 				//\var_dump($resultado);
 				$this->assertTrue($vehiculo->isDisponible());
 				//// Primera VEnta
-				$client =  static::createClient();
-				$response =$client
-				                  ->request('GET', self::URL."/$id/vender", [
-					                  'json' => $vehiculo,
-				                  ]);
+				$client   = static::createClient();
+				$response = $client
+					->request('GET', self::URL."/$id/vender", [
+						'json' => $vehiculo,
+					]);
 				
 				$resultado = $response->toArray();
 				if ($resultado['resultado'] !== 'ok') {
@@ -307,8 +350,8 @@ class VehiculoTest extends ApiTestCase
 				$this->assertEquals('ok', $resultado['resultado']);
 				$venta = $resultado['vehiculo']['venta'];
 				$this->assertNotNull($venta);
-				$vehiculo      = $entityManager->getRepository(Vehiculo::class)
-				                               ->find($id);
+				$vehiculo = $entityManager->getRepository(Vehiculo::class)
+				                          ->find($id);
 				$this->assertEquals('Yamaha', $vehiculo->getMarca());
 				$this->assertEquals('cross', $vehiculo->getModelo());
 				$this->assertFalse($vehiculo->isDisponible());
@@ -316,9 +359,9 @@ class VehiculoTest extends ApiTestCase
 				//// Segunda venta
 				
 				$response = $client
-				                  ->request('GET', self::URL."/$id/vender", [
-					                  'json' => $vehiculo,
-				                  ]);
+					->request('GET', self::URL."/$id/vender", [
+						'json' => $vehiculo,
+					]);
 				
 				$resultado = $response->toArray();
 				if ($resultado['resultado'] !== 'error') {
@@ -339,6 +382,101 @@ class VehiculoTest extends ApiTestCase
 				$this->assertEquals('Yamaha', $vehiculo->getMarca());
 				$this->assertEquals('cross', $vehiculo->getModelo());
 				$this->assertFalse($vehiculo->isDisponible());
+		}
+		
+		public function testVerificarAuto()
+		{
+				$vehiculo  = [
+					'tipo'      => 'a',
+					'marca'     => 'Renault',
+					'modelo'    => '12',
+					'color'     => 'gris',
+					'matricula' => 'VI1986',
+					'venta'     => null,
+				];
+				
+				$response  = static::createClient()
+				                   ->request('GET', self::URL."/verificar",
+					                   ['json' => $vehiculo]
+				                   );
+				$resultado = $response->toArray();
+				
+				if ($resultado['resultado'] !== 'ok') {
+						\var_dump($resultado);
+				}
+				$this->assertEquals('ok', $resultado['resultado']);
+		}
+		
+		public function testVerificarAutoFallo()
+		{
+				$vehiculo = [
+					'tipo'      => 'a',
+					'marca'     => 'Renault',
+					'modelo'    => '12',
+					'color'     => 'gris',
+					'matricula' => 'VIA1986',
+					'venta'     => null,
+				];
+				$response = static::createClient()
+				                  ->request('GET', self::URL."/verificar", [
+					                  'json' => $vehiculo,
+				                  
+				                  ]);
+				
+				$resultado = $response->toArray();
+				
+				if ($resultado['resultado'] === 'ok') {
+						\var_dump($resultado);
+				}
+				$this->assertNotEquals('ok', $resultado['resultado']);
+				//var_dump($resultado);
+		}
+		
+		
+		public function testVerificarMoto()
+		{
+				$vehiculo = [
+					'tipo' => 'm',
+					'marca'     => 'Honda',
+					'modelo'    => '600cc',
+					'color'     => 'negra',
+					'matricula' => '600H',
+				];
+				
+				$response  = static::createClient()
+				                   ->request('GET', self::URL."/verificar",
+					                   ['json' => $vehiculo]
+				                   );
+				$resultado = $response->toArray();
+				
+				if ($resultado['resultado'] !== 'ok') {
+						\var_dump($resultado);
+				}
+				$this->assertEquals('ok', $resultado['resultado']);
+		}
+		
+		public function testVerificarMotoFallo()
+		{
+				$vehiculo = [
+					'tipo' => 'm',
+					'marca'     => 'Honda',
+					'modelo'    => '600cc',
+					'color'     => 'negra',
+					'matricula' => '60HH',
+				];
+				$response = static::createClient()
+				                  ->request('GET', self::URL."/verificar", [
+					                  'json' => $vehiculo,
+				                  
+				                  ]);
+				
+				$resultado = $response->toArray();
+				
+				if ($resultado['resultado'] === 'ok') {
+						\var_dump($resultado);
+				}
+				$this->assertNotEquals('ok', $resultado['resultado']);
+				//var_dump($resultado);
 		}
 		
 		

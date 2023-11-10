@@ -51,6 +51,9 @@ abstract class Vehiculo implements \Serializable, VehiculoInterface, \JsonSerial
 		
 		public static function create(string $tipo): Vehiculo
 		{
+				if (!isset(self::TIPOS[$tipo])) {
+					throw new \Exception('Tipo de vehiculo no soportado: '.$tipo);
+				}
 				$class = self::TIPOS[$tipo];
 				return new $class();
 		}
